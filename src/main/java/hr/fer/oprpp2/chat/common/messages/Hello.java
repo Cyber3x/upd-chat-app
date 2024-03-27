@@ -2,52 +2,57 @@ package hr.fer.oprpp2.chat.common.messages;
 
 import java.io.*;
 
-public class Hello {
-    public static final byte MESSAGE_TYPE_ID = 1;
+public class Hello extends Message {
+    public final static byte MESSAGE_TYPE_ID = 1;
 
-    private final long number;
-    private final String senderName;
-    private final long randKey;
+    private long messageNumber;
+    private String senderName;
+    private long randKey;
 
-    public Hello(long number, String senderName, long randKey) {
-        this.number = number;
+    public Hello(long messageNumber, String senderName, long randKey) {
+        this.messageNumber = messageNumber;
         this.senderName = senderName;
         this.randKey = randKey;
     }
 
-    public static Hello fromBytes(byte[] input) {
-        try (
-                ByteArrayInputStream bis = new ByteArrayInputStream(input);
-                DataInputStream dis = new DataInputStream(bis);
-        ) {
-            byte messageTypeId = dis.readByte();
-            long number = dis.readLong();
-            String senderName = dis.readUTF();
-            long randKey = dis.readLong();
-            return new Hello(number, senderName, randKey);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public Hello(byte[] data) {
+        fillFromBytes(data);
     }
 
+    @Override
+    void readDataFromStream(DataInputStream dataInputStream) throws IOException {
+        messageNumber = dataInputStream.readLong();
+        senderName = dataInputStream.readUTF();
+        randKey = dataInputStream.readLong();
+    }
 
-    public byte[] toBytes() {
-        try (
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                DataOutputStream dos = new DataOutputStream(bos);
-        ) {
-            dos.writeByte(MESSAGE_TYPE_ID);
-            dos.writeLong(this.number);
-            dos.writeUTF(this.senderName);
-            dos.writeLong(this.randKey);
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    @Override
+    public byte getMessageTypeId() {
+        return MESSAGE_TYPE_ID;
+    }
+
+    @Override
+    void writeDataToStream(DataOutputStream dataOutputStream) throws IOException {
+        dataOutputStream.writeLong(this.messageNumber);
+        dataOutputStream.writeUTF(this.senderName);
+        dataOutputStream.writeLong(this.randKey);
     }
 
     @Override
     public String toString() {
-        return String.format("HELLO %d from: %s, randKey: %d", this.number, this.senderName, this.randKey);
+        return String.format("[HELLO(%d) senderName = %s, randKey = %d]", this.messageNumber, this.senderName, this.randKey);
+    }
+
+    @Override
+    public long getMessageNumber() {
+        return messageNumber;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public long getRandKey() {
+        return randKey;
     }
 }

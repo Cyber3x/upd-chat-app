@@ -1,47 +1,32 @@
 package hr.fer.oprpp2.chat.common.messages;
 
 import java.io.*;
-import java.util.Objects;
 
-public final class Ack {
+public final class Ack extends Message {
     public static final byte MESSAGE_TYPE_ID = 2;
 
-    private final byte messageTypeId;
-    private final long number;
-    private final long UID;
+    private long messageNumber;
+    private long UID;
 
     public Ack(long number, long UID) {
-        this.messageTypeId = MESSAGE_TYPE_ID;
-        this.number = number;
+        this.messageNumber = number;
         this.UID = UID;
     }
 
-    public static Ack fromBytes(byte[] input) {
-        try (
-                ByteArrayInputStream bis = new ByteArrayInputStream(input);
-                DataInputStream dis = new DataInputStream(bis);
-        ) {
-            byte messageTypeId = dis.readByte();
-            long number = dis.readLong();
-            long UID = dis.readLong();
-            return new Ack(number, UID);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public Ack(byte[] data) {
+        this.fillFromBytes(data);
     }
 
-    public byte[] toBytes() {
-        try (
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                DataOutputStream dos = new DataOutputStream(bos);
-        ) {
-            dos.writeByte(MESSAGE_TYPE_ID);
-            dos.writeLong(this.number);
-            dos.writeLong(this.UID);
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    @Override
+    void readDataFromStream(DataInputStream dataInputStream) throws IOException {
+        this.messageNumber = dataInputStream.readLong();
+        this.UID = dataInputStream.readLong();
+    }
+
+    @Override
+    void writeDataToStream(DataOutputStream dataOutputStream) throws IOException {
+        dataOutputStream.writeLong(this.messageNumber);
+        dataOutputStream.writeLong(this.UID);
     }
 
     public static int getByteSize() {
@@ -51,15 +36,15 @@ public final class Ack {
 
     @Override
     public String toString() {
-        return String.format("ACK %d: UID: %d", this.number, this.UID);
+        return String.format("[ACK(%d) UID = %d]", this.messageNumber, this.UID);
     }
 
     public byte getMessageTypeId() {
-        return messageTypeId;
+        return MESSAGE_TYPE_ID;
     }
 
-    public long getNumber() {
-        return number;
+    public long getMessageNumber() {
+        return messageNumber;
     }
 
     public long getUID() {

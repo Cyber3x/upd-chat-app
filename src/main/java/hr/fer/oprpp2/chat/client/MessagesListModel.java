@@ -14,16 +14,14 @@ public class MessagesListModel implements ListModel<String> {
 
     public void addMessage(String serverHostname, int port, InMsg messageData) {
         String formattedMessage = String.format("[%s:%d] Poruka od korisnika: %s",
-                serverHostname, port, messageData.senderName());
-
+                serverHostname, port, messageData.getSenderName());
 
         messages.add(0, formattedMessage);
-        messages.add(1, messageData.messageText());
+        messages.add(1, messageData.getMessageText());
         messages.add(2, "\n");
 
         for (ListDataListener l : listeners) {
-            l.intervalAdded(
-                    new ListDataEvent(
+            l.intervalAdded(new ListDataEvent(
                             this,
                             ListDataEvent.INTERVAL_ADDED,
                             0,

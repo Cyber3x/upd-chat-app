@@ -2,58 +2,45 @@ package hr.fer.oprpp2.chat.common.messages;
 
 import java.io.*;
 
-public class Bye {
+public class Bye extends Message {
     public static final byte MESSAGE_TYPE_ID = 3;
 
-    private final byte messageTypeId;
-    private final long number;
-    private final long UID;
+    private long messageNumber;
+    private long UID;
 
     public Bye(long number, long UID) {
-        this.messageTypeId = MESSAGE_TYPE_ID;
-        this.number = number;
+        this.messageNumber = number;
         this.UID = UID;
     }
 
-    public static Bye fromBytes(byte[] input) {
-        try (
-                ByteArrayInputStream bis = new ByteArrayInputStream(input);
-                DataInputStream dis = new DataInputStream(bis);
-        ) {
-            byte messageTypeId = dis.readByte();
-            long number = dis.readLong();
-            long UID = dis.readLong();
-            return new Bye(number, UID);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public Bye(byte[] data) {
+        fillFromBytes(data);
     }
 
-    public byte[] toBytes() {
-        try (
-                ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                DataOutputStream dos = new DataOutputStream(bos);
-        ) {
-            dos.writeByte(MESSAGE_TYPE_ID);
-            dos.writeLong(this.number);
-            dos.writeLong(this.UID);
-            return bos.toByteArray();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    @Override
+    void writeDataToStream(DataOutputStream dataOutputStream) throws IOException {
+        dataOutputStream.writeLong(this.messageNumber);
+        dataOutputStream.writeLong(this.UID);
+    }
+
+    @Override
+    void readDataFromStream(DataInputStream dataInputStream) throws IOException {
+        messageNumber = dataInputStream.readLong();
+        UID = dataInputStream.readLong();
     }
 
     @Override
     public String toString() {
-        return String.format("BYE %d: UID: %d", this.number, this.UID);
+        return String.format("[BYE(%d) UID = %d]", this.messageNumber, this.UID);
     }
 
     public byte getMessageTypeId() {
-        return messageTypeId;
+        return MESSAGE_TYPE_ID;
     }
 
-    public long getNumber() {
-        return number;
+    @Override
+    public long getMessageNumber() {
+        return messageNumber;
     }
 
     public long getUID() {

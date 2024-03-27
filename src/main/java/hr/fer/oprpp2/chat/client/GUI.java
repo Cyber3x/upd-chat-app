@@ -9,11 +9,14 @@ import java.awt.event.WindowEvent;
 
 public class GUI extends JFrame {
 
-    private final ChatClient chatClient;
+    private final IChatClient chatClient;
     private JTextField textField;
+
     private MessagesListModel messagesListModel;
 
-    public GUI(ChatClient chatClient) {
+
+    public GUI(ChatClient chatClient, MessagesListModel messagesListModel) {
+        this.messagesListModel = messagesListModel;
         this.chatClient = chatClient;
 
         initGUI();
@@ -28,7 +31,6 @@ public class GUI extends JFrame {
         Container container = getContentPane();
         container.setLayout(new BorderLayout());
 
-        messagesListModel = new MessagesListModel();
         textField = new JTextField();
 
         JList<String> list = new JList<>(messagesListModel);
@@ -50,20 +52,13 @@ public class GUI extends JFrame {
                 String messageText = textField.getText();
 
                 if (messageText.equals("quit")) {
-                    chatClient.sendByeMessage();
+                    chatClient.initiateDisconnect();
                     dispose();
+                    return;
                 }
 
-                chatClient.sendMessage(messageText);
+                chatClient.sendTextMessage(messageText);
 
-//                messagesListModel.addMessage(
-//                        chatClient.getServerSocketAddress().getHostName(),
-//                        chatClient.getServerSocketAddress().getPort(),
-//                        new InMsg(
-//                                2, chatClient.getSenderName(),
-//                                textField.getText()
-//                        )
-//                );
                 textField.setText("");
             }
         });
@@ -71,7 +66,7 @@ public class GUI extends JFrame {
         this.addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-                chatClient.sendByeMessage();
+                chatClient.initiateDisconnect();
                 dispose();
             }
         });

@@ -5,11 +5,12 @@ import javax.swing.*;
 public class Main {
     public static void main(String[] args) {
         ParsedArgs parsedArgs = parseArgs(args);
+        MessagesListModel messagesListModel = new MessagesListModel();
 
-        ChatClient chatClient = new ChatClient(parsedArgs.hostname, parsedArgs.port, parsedArgs.senderName);
+        ChatClient chatClient = new ChatClient(parsedArgs.hostname, parsedArgs.port, parsedArgs.senderName, messagesListModel);
 
         SwingUtilities.invokeLater(() -> {
-            new GUI(chatClient).setVisible(true);
+            new GUI(chatClient, messagesListModel).setVisible(true);
         });
     }
 
