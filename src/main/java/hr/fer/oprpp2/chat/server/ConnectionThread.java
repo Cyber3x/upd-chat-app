@@ -1,6 +1,5 @@
 package hr.fer.oprpp2.chat.server;
 
-import hr.fer.oprpp2.chat.client.ChatClient;
 import hr.fer.oprpp2.chat.common.SentMessageMetadata;
 import hr.fer.oprpp2.chat.common.messages.Ack;
 import hr.fer.oprpp2.chat.common.messages.InMsg;
@@ -30,12 +29,12 @@ public class ConnectionThread extends Thread {
     private final HashMap<Long, SentMessageMetadata> sentMessagesWaitingForAck = new HashMap<>();
     private final DatagramSocket serverSocket;
     private final SocketAddress clientSocketAddress;
-    private final String clientSenderName;
+    private final String clientName;
 
     public ConnectionThread(DatagramSocket serverSocket, SocketAddress clientSocketAddress, String clientSenderName, ScheduledExecutorService scheduler) {
         this.serverSocket = serverSocket;
         this.clientSocketAddress = clientSocketAddress;
-        this.clientSenderName = clientSenderName;
+        this.clientName = clientSenderName;
         this.scheduler = scheduler;
 
     }
@@ -46,7 +45,7 @@ public class ConnectionThread extends Thread {
 
     @Override
     public void run() {
-        System.out.println("Created thread for senderName = " + clientSenderName);
+        System.out.println("Created thread for senderName = " + clientName);
         Message currentMessage;
 
         while (isRunning.get()) {
@@ -60,7 +59,7 @@ public class ConnectionThread extends Thread {
                 case OutMsg.MESSAGE_TYPE_ID -> {
                     OutMsg incomingMessage = (OutMsg) currentMessage;
 
-                    InMsg outgoingMessage = new InMsg(messageNumber++, clientSenderName, incomingMessage.getMessageText());
+                    InMsg outgoingMessage = new InMsg(messageNumber++, incomingMessage.getSenderName(), incomingMessage.getMessageText());
                     sendMessage(outgoingMessage);
                 }
                 case Ack.MESSAGE_TYPE_ID -> {
@@ -70,7 +69,7 @@ public class ConnectionThread extends Thread {
                 default -> System.err.println("Connection thread got unsupported packager.");
             }
         }
-        System.out.println("Thread stopping, was for senderName = " + clientSenderName);
+        System.out.println("Thread stopping, was for senderName = " + clientName);
     }
 
     public void sendMessage(Message message) {
@@ -85,7 +84,7 @@ public class ConnectionThread extends Thread {
 
             int messageResendsLeft = sentMessageMetadata == null ? PACKET_RESEND_COUNT : sentMessageMetadata.numberOfRetransmissionLeft() - 1;
 
-            if (messageResendsLeft < 0) {
+            if (messageResendsLeft <= 0) {
                 System.out.println("No retransmissions left for messageNumber = " + messageNumber);
                 sentMessagesWaitingForAck.remove(messageNumber);
                 return;
@@ -95,7 +94,7 @@ public class ConnectionThread extends Thread {
             SentMessageMetadata newSentMessageMetadata = new SentMessageMetadata(message, messageResendsLeft);
 
             sentMessagesWaitingForAck.put(messageNumber, newSentMessageMetadata);
-            System.out.println("Packet sent, metadata put into hashMap, messageNumber = " + messageNumber);
+            System.out.printf("Packet sent to %s, metadata put into hashMap, messageNumber = %d\n", clientName, messageNumber);
 
             // Send the message
             serverSocket.send(message.toPacket((InetSocketAddress) clientSocketAddress));

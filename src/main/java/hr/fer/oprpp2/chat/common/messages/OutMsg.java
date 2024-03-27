@@ -9,6 +9,8 @@ public class OutMsg extends Message {
     private long UID;
     private String messageText;
 
+    private String senderName;
+
     public OutMsg(long number, long UID, String messageText) {
         this.messageNumber = number;
         this.UID = UID;
@@ -54,5 +56,13 @@ public class OutMsg extends Message {
 
     public String getMessageText() {
         return messageText;
+    }
+
+    public String getSenderName() {
+        return senderName;
+    }
+
+    public void setSenderName(String senderName) {
+        this.senderName = senderName;
     }
 }

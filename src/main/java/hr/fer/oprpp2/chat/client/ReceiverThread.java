@@ -41,14 +41,18 @@ public class ReceiverThread extends Thread {
                 throw new RuntimeException(e);
             }
 
+            System.out.printf("\nReceived packet from: %s\nPacket: ", receivePacket.getSocketAddress());
+
             byte packetType = receivePacket.getData()[0];
             switch (packetType) {
                 case Ack.MESSAGE_TYPE_ID -> {
                     Ack ack = new Ack(receivePacket.getData());
+                    System.out.println(ack);
+
                     long messageNumber = ack.getMessageNumber();
 
                     SentMessageMetadata sentMessageMetadata = this.sentMessagesWaitingForAck.get(messageNumber);
-                    System.out.printf("ack for message number %d received. Was msg waiting for ack?: %s\n", messageNumber, sentMessageMetadata != null);
+                    System.out.printf("Was message waiting for ack?: %s\n", sentMessageMetadata != null);
 
                     if (sentMessageMetadata != null) {
                         this.sentMessagesWaitingForAck.remove(messageNumber);
@@ -66,7 +70,8 @@ public class ReceiverThread extends Thread {
                 }
                 case InMsg.MESSAGE_TYPE_ID -> {
                     InMsg inMsg = new InMsg(receivePacket.getData());
-                    System.out.printf("received a message from: %s, with message number: %d\n", inMsg.getSenderName(), inMsg.getMessageNumber());
+                    System.out.println(inMsg);
+
                     chatClient.handleIncomingMessage(inMsg);
                 }
                 default -> System.out.printf("got packet with type: %d, currently not supported\n", packetType);

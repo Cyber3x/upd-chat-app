@@ -71,7 +71,7 @@ public class ChatServer {
                     connectionThread.setDaemon(true);
                     connectionThread.start();
 
-                    ConnectionDescriptor newConnectionDescriptor = new ConnectionDescriptor(helloMessage.getRandKey(), UID, connectionThread);
+                    ConnectionDescriptor newConnectionDescriptor = new ConnectionDescriptor(helloMessage.getRandKey(), UID, helloMessage.getSenderName(), connectionThread);
                     connectionsStorage.storeConnection(incomingPacketAddress, newConnectionDescriptor);
                 } else {
                     ack = new Ack(helloMessage.getMessageNumber(), connectionDescriptor.orElseThrow().UID());
@@ -90,6 +90,9 @@ public class ChatServer {
                 Bye bye = new Bye(incomingPacketData);
                 System.out.println(bye);
 
+                Ack ack = new Ack(bye.getMessageNumber(), bye.getUID());
+                sendAck(ack, (InetSocketAddress) incomingPacketAddress);
+
                 connectionsStorage.getConnectionDescriptorByUID(incomingPacketAddress, bye.getUID())
                         .ifPresent(
                                 (connectionDescriptor) -> {
@@ -105,8 +108,11 @@ public class ChatServer {
                 Ack ack = new Ack(outMsg.getMessageNumber(), outMsg.getUID());
                 sendAck(ack, (InetSocketAddress) incomingPacketAddress);
 
-                for (ConnectionDescriptor connectionDescriptor : connectionsStorage.getAllConnectionDescriptors()) {
-                    connectionDescriptor.connectionThread().addMessage(outMsg);
+                ConnectionDescriptor connectionDescriptor = connectionsStorage.getConnectionDescriptorByUID(incomingPacketAddress, outMsg.getUID()).orElseThrow();
+                outMsg.setSenderName(connectionDescriptor.clientName());
+
+                for (ConnectionDescriptor targetConnectionDescriptor : connectionsStorage.getAllConnectionDescriptors()) {
+                    targetConnectionDescriptor.connectionThread().addMessage(outMsg);
                 }
             }
             default -> {

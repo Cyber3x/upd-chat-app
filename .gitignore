@@ -1,3 +1,5 @@
 target/
 cupic-demo/oprpp2
 .idea
+cupic-demo
+*.pdf

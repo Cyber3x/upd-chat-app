@@ -47,6 +47,7 @@ public class ChatClient implements IChatClient {
 
     public void sendMessage(Message message) {
         try {
+            System.out.println("\nSending: " + message);
             long messageNumber = message.getMessageNumber();
 
             // Create a timer that will fire after socket timeout to check if we can resend this message
@@ -57,8 +58,8 @@ public class ChatClient implements IChatClient {
 
             int messageResendsLeft = sentMessageMetadata == null ? PACKET_RESEND_COUNT : sentMessageMetadata.numberOfRetransmissionLeft() - 1;
 
-            if (messageResendsLeft < 0) {
-                System.out.println("No retransmissions left for message: " + messageNumber);
+            if (messageResendsLeft <= 0) {
+                System.out.println("No retransmissions left for messageNumber = " + messageNumber);
                 sentMessagesWaitingForAck.remove(messageNumber);
                 return;
             }
@@ -67,7 +68,7 @@ public class ChatClient implements IChatClient {
             SentMessageMetadata newSentMessageMetadata = new SentMessageMetadata(message, messageResendsLeft);
 
             sentMessagesWaitingForAck.put(messageNumber, newSentMessageMetadata);
-            System.out.println("metadata put into hashMap for message: " + messageNumber);
+            System.out.println("Packet sent, metadata put into hashMap, messageNumber = " + messageNumber);
 
             // Send the message
             clientSocket.send(message.toPacket(serverSocketAddress));
@@ -79,7 +80,7 @@ public class ChatClient implements IChatClient {
     public void sendAck(Ack ack) {
         try {
             clientSocket.send(ack.toPacket(serverSocketAddress));
-            System.out.println("sent ack for message number: " + ack.getMessageNumber());
+            System.out.println("Sent: " + ack);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -111,13 +112,12 @@ public class ChatClient implements IChatClient {
             // the message is not in the hash map -> it received an ack and was removed
             if (sentMessageMetadata == null) return;
 
-            System.out.printf("retransmitting message with number: %d, retransmission left: %d\n", sentMessageMetadata.message().getMessageNumber(), sentMessageMetadata.numberOfRetransmissionLeft());
+            System.out.printf("Retransmitting message with messageNumber = %d, retransmission left = %d\n", sentMessageMetadata.message().getMessageNumber(), sentMessageMetadata.numberOfRetransmissionLeft());
             sendMessage(message);
         }
     }
 
     private void sendHelloMessage() {
-        System.out.println("sent hello msg");
         Message helloMessage = new Hello(currentMessageNumber++, senderName, new Random().nextLong());
 
         sendMessage(helloMessage);
@@ -125,7 +125,6 @@ public class ChatClient implements IChatClient {
 
 
     public void sendByeMessage() {
-        System.out.println("sent by msg");
         Message byeMessage = new Bye(currentMessageNumber++, UID);
 
         sendMessage(byeMessage);
