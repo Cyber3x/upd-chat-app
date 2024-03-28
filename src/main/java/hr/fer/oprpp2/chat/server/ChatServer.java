@@ -108,6 +108,8 @@ public class ChatServer {
                 Ack ack = new Ack(outMsg.getMessageNumber(), outMsg.getUID());
                 sendAck(ack, (InetSocketAddress) incomingPacketAddress);
 
+                if (outMsg.getMessageText().isBlank()) return;
+
                 ConnectionDescriptor connectionDescriptor = connectionsStorage.getConnectionDescriptorByUID(incomingPacketAddress, outMsg.getUID()).orElseThrow();
                 outMsg.setSenderName(connectionDescriptor.clientName());
 

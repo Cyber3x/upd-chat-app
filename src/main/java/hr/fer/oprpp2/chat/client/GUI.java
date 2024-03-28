@@ -57,6 +57,8 @@ public class GUI extends JFrame {
                     return;
                 }
 
+                if (messageText.isBlank()) return;
+
                 chatClient.sendTextMessage(messageText);
 
                 textField.setText("");
